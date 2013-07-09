@@ -27,7 +27,7 @@ var cheerio = require('cheerio');
 var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
-var URL_DEFAULT = "http://google.com";
+var URL_DEFAULT = "http://frozen-ocean-4822.herokuapp.com/";
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -39,7 +39,6 @@ var assertFileExists = function(infile) {
 };
 
 var downloadFile = function(url) {
-    console.log(url);
     rest.get(url).on('complete', function(result) {
 	checkAndPrint(result, program.checks);
     });
