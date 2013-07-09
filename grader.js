@@ -24,8 +24,10 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URL_DEFAULT = "http://google.com";
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -36,8 +38,15 @@ var assertFileExists = function(infile) {
     return instr;
 };
 
+var downloadFile = function(url) {
+    console.log(url);
+    rest.get(url).on('complete', function(result) {
+	checkAndPrint(result, program.checks);
+    });
+};
+
 var cheerioHtmlFile = function(htmlfile) {
-    return cheerio.load(fs.readFileSync(htmlfile));
+    return cheerio.load(htmlfile);
 };
 
 var loadChecks = function(checksfile) {
@@ -55,6 +64,12 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+var checkAndPrint = function(file, checks) {
+    var checkJson = checkHtmlFile(file, checks);
+    var outJson = JSON.stringify(checkJson, null, 4);
+    console.log(outJson);
+};
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
@@ -65,10 +80,13 @@ if(require.main == module) {
     program
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
+	.option('-u, --url <url>', 'URL to index.html') 
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+    if(!program.url) {
+	checkAndPrint(fs.readFileSync(program.file), program.checks);
+    } else {
+	downloadFile(program.url);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
